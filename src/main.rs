@@ -58,6 +58,9 @@ const BUTTON_COLOR_INACTIVE: f64 = 0.200;
 const BUTTON_COLOR_ACTIVE: f64 = 0.400;
 const DEFAULT_ICON_SIZE: i32 = 48;
 const TIMEOUT_MS: i32 = 10 * 1000;
+// config::load_config always builds [primary/media, media/primary, extra],
+// so the extra layer is always index 2.
+const EXTRA_LAYER_IDX: usize = 2;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum BatteryState {
@@ -862,6 +865,7 @@ fn real_main(drm: &mut DrmBackend) {
     let mut surface =
         ImageSurface::create(Format::ARgb32, db_width as i32, db_height as i32).unwrap();
     let mut active_layer = 0;
+    let mut extra_held = false;
     let mut needs_complete_redraw = true;
 
     let mut input_tb = Libinput::new_with_udev(Interface);
@@ -996,15 +1000,25 @@ fn real_main(drm: &mut DrmBackend) {
                 }
                 Event::Keyboard(KeyboardEvent::Key(key)) => {
                     if key.key() == Key::Fn as u32 {
-                        if cfg.double_press_switch_layers > 0 && key.key_state() == KeyState::Pressed {
-                            if last.elapsed() < Duration::from_millis(cfg.double_press_switch_layers.into()) {
+                        let pressed = key.key_state() == KeyState::Pressed;
+                        if pressed {
+                            let since = last.elapsed();
+                            let within = |ms: u32| ms > 0 && since < Duration::from_millis(ms.into());
+                            // Double press and hold wins over the layer swap, so
+                            // both features can be enabled with the same window.
+                            if within(cfg.double_press_hold_extra_layer) {
+                                extra_held = true;
+                            } else if within(cfg.double_press_switch_layers) {
                                 layers.swap(0, 1);
                             }
                             last = Instant::now();
+                        } else {
+                            extra_held = false;
                         }
-                        let new_layer = match key.key_state() {
-                            KeyState::Pressed => 1,
-                            KeyState::Released => 0,
+                        let new_layer = match (pressed, extra_held) {
+                            (true, true) => EXTRA_LAYER_IDX,
+                            (true, false) => 1,
+                            (false, _) => 0,
                         };
                         if active_layer != new_layer {
                             active_layer = new_layer;

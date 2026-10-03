@@ -2,6 +2,11 @@
 # copy it to /etc/tiny-dfr/config.toml and edit that copy.
 # The daemon will merge those two files, giving preference to the one in /etc
 
+# There are three layers: Primary, Media, and Extra.
+# Holding Fn toggles between Primary and Media (whichever isn't the default).
+# Double pressing Fn and holding it on the second press shows the Extra layer,
+# regardless of which of Primary/Media is the default. No modifier key is
+# involved, so the buttons on it send the plain key.
 # F{number} keys are shown when Fn is not pressed by default.
 # Set this to true if you want the media keys to be shown without Fn pressed
 MediaLayerDefault = false
@@ -39,6 +44,12 @@ ActiveBrightness = 128
 # 0 disables the feature, >0 defines how quick the double press must be in ms.
 # A sensible value to try is around 200.
 DoublePressSwitchLayers = 0
+
+# Double press Fn and keep holding it to show the Extra layer for as long as
+# it is held. 0 disables the Extra layer, >0 defines how quick the double
+# press must be in ms. If both this and DoublePressSwitchLayers are enabled,
+# a double press inside this window shows the Extra layer instead of swapping.
+DoublePressHoldExtraLayer = 300
 
 # This key defines the contents of the primary layer
 # (the one with F{number} keys)
@@ -165,4 +176,21 @@ MediaLayerKeys = [
     # { Icon = "audio-volume-muted",   Theme = "breeze-dark", Action = "Mute"           },
     # { Icon = "audio-volume-low",     Theme = "breeze-dark", Action = "VolumeDown"     },
     # { Icon = "audio-volume-high",    Theme = "breeze-dark", Action = "VolumeUp"       }
+]
+
+# This key defines the contents of the extra layer, shown while Fn is
+# held after a double press (see DoublePressHoldExtraLayer).
+# This is a tiny-dfr-xtra addition: upstream tiny-dfr only has the
+# two layers above, switched by Fn alone.
+# The old name CtrlLayerKeys is still accepted.
+ExtraLayerKeys = [
+    { Text = "Ins",   Action = "Insert"     },
+    { Text = "Home",  Action = "Home"       },
+    { Text = "PgUp",  Action = "PageUp"     },
+    { Text = "PgDn",  Action = "PageDown"   },
+    { Text = "End",   Action = "End"        },
+    { Text = "Del",   Action = "Delete"     },
+    { Text = "PrSc",  Action = "Sysrq"      },
+    { Text = "ScrLk", Action = "ScrollLock" },
+    { Text = "Pause", Action = "Pause"      }
 ]
